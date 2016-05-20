@@ -6,15 +6,15 @@ import UserManager as User
 import LeaderBoardManager as Leaderboard
 import urllib.request
 import urllib.response
-import zipfile
 from tkinter import *
 
+#Initialising Pygame
 pygame.init()
 
-# #Defining Colours For Game In RGB Mode
-black = (0, 0, 0)
-white = (255, 255, 255)
-red = (200, 0, 0)
+#Colours Starts Here
+black = (0,0,0)
+white = (255,255,255)
+red = (200,0,0)
 blue = (0, 0, 255)
 yellow = (200, 200, 0)
 green = (0, 155, 0)
@@ -22,89 +22,54 @@ light_green = (0, 255, 0)
 light_yellow = (255, 255, 0)
 light_red = (255, 0, 0)
 light_blue = (102,169,230)
-# #Colours ENDS Here
+#Colours ends here
 
-current_version = "2.0.2"
-
-def get_latest_version():
-    url = "http://dodgethat.co.uk/version.php"
-    urlr = urllib.request.Request(url)
-    urls = urllib.request.urlopen(urlr)
-    url_read = urls.read()
-    url_read = str(url_read)
-    url_read = url_read.split("'")
-    url_read = url_read[1].split("'")
-    url_read = url_read[0]
-    return url_read
-
-latest_version = get_latest_version()
-
-
-
+#Game display configurations starts here
 display_width = 800  # Width of Screen
 display_height = 600  # Height of Screen
 bg_image = "images/bg.jpg"  # Background image file
+colours = [black, red, blue, green, light_red, light_yellow]  # All the colours in an array, not in use at the moment
+gameDisplay = pygame.display.set_mode((display_width, display_height))  # Setting the pygame window
+pygame.display.set_caption('Dodge That!')  # Setting the window title bar
+bg = pygame.image.load(bg_image).convert()  # Loading the background and converting it to optimize it
+#Game display configuratios ends here
+
+#Gameplay configurations starts here
+points = 0 #Global variable for user score
 random_ball_pos = [30, 130, 230, 330, 430, 530]  # Ball positions randomly selected from these
 random_ball_pos_right = [330, 430, 530]  # Positions on the right side of screen
 random_ball_pos_left = [30, 130, 230]  # Positions on the left side of screen
-
-points = 0  # Global variable for points so it can be initialised for the whole session
-
-colours = [black, red, blue, green, light_red, light_yellow]  # All the colours in an array, not in use at the moment
-
-gameDisplay = pygame.display.set_mode((display_width, display_height))  # Setting the pygame window
-
-pygame.display.set_caption('Dodge That!')  # Setting the window title bar
-bg = pygame.image.load(bg_image).convert()  # Loading the background and converting it to optimize it
 clock = pygame.time.Clock()  # Loading pygame clock
 multiples_list = []  # Empty list for multiples which gets stored from a function
 twenty_list = []
 barr = "images/bar.png"  # Image location of bar image used in game
 image_file = pygame.image.load(barr).convert_alpha()  # Loading the bar image and
 #  converting it to alpha so alpha channel gets used for background transparency
-user_points = 0
+#Gameplay configurations ends here
+
+#Leaderboard connection to server
 try:
     leaderboard = Leaderboard.LeaderBoardManager()
     scores = leaderboard.run()
 except:
-    print ("Can't connect to server")
+    print ("Cannot connect to server at this moment")
+#Leaderboard connection ends here
 
-class Xp:
-    def write_xp(self, points):
-        self.file_write = open("xp.txt", "wt")
-        self.file_write.write(str(points * 5))
-        self.file_write.close()
-
-    def read_xp(self):
-        self.file_read = open("xp.txt", "rt")
-        for line in self.file_read:
-            return line[0]
-
-
-def download_file():
-    url = "http://dodgethat.co.uk/download/dodgethat.zip"
-    filed = urllib.request.Request(url)
-    filea = urllib.request.urlopen(filed)
-    fileb = filea.read()
-    files = open("dodgethat.zip","wb")
-    files.write(fileb)
-    files.close()
-    return True
-
-def unzip():
-    zip = zipfile.ZipFile("dodgethat.zip")
-    zip.extractall()
-    return True
-
-
+#Function to set the user as online
 def online_update(username):
         url = "http://dodgethat.co.uk/update_online.php?username="+str(username)+"&password=sameer123&action=online";
         urllib.request.urlopen(url);
         return True
+#Functions Online ends here
+
+#Function to set the user as offline when it quits the game
 def offline_update(username):
     url = "http://dodgethat.co.uk/update_online.php?username="+str(username)+"&password=sameer123&action=offline";
     urllib.request.urlopen(url);
     return True
+#Function Offline ends here
+
+#User coin functionality starts here
 def get_coin_value(username):
     url = "http://dodgethat.co.uk/coins.php?username="+str(username)+"&action=show"
     content = urllib.request.Request(url)
@@ -117,51 +82,17 @@ def get_coin_value(username):
 def update_coins(username,coins):
     url = "http://dodgethat.co.uk/coins.php?username="+str(username)+"&coins="+str(coins)+"&password=sameer123"
     urllib.request.urlopen(url)
+#User coin functionality ends here
 
-
-class Bullet:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = x
-
-    def shoot(self):
-        return True
-
-    def render(self):
-        pygame.draw.rect(gameDisplay, red, (self.x, self.y, 100, 100))
-
-
-##Class for general image loading
-class Image:
-    def __init__(self, x, y, width, height, location):  # Building a class constructor
-        self.x = x  # storing x-axis value
-        self.y = y  # Storing y-axis value
-        self.width = width  # Storing image width value
-        self.height = height  # Storing image height value
-        self.image_location = location  # Storing the image location
-        self.image = "images/" + image_location  # Finalising the image location
-
-    def load(self):
-        self.display_image = pygame.image.load(
-            self.image).convert_alpha()  # Loading the image assuming it would be a png file
-        self.display_image = pygame.transform.scale(self.display_image, (
-        self.width, self.height))  # Transforming image to correct width and height
-
-    def render(self):
-        self.load()  # Call the function above
-        gameDisplay.blit(self.display_image, (self.x, self.y))  # Displaying image on the screen
-
-
+#Server connection starts here
 try:
-    server = Scores.Scores()  # Creating a Server Instance
-    global_high_score = server.get_num_score()  # Getting Global High Score From Server
-
+    server = Scores.Scores()
+    global_high_score = server.get_num_score()
 except:
-    print("cannot connect to server")  # If No Internet Connection
-    global_high_score = "Cannot Connect"
+    print ("Cannot connect to server at this moment")
+    global_high_score = "Connection failed"
 
-
-# Health Management
+#Heath Management Starts Here
 class Health:
     def __init__(self, x, y, width, height):
         self.x = x  # x-axis of health image
@@ -177,8 +108,9 @@ class Health:
     def render(self):
         self.load()
         gameDisplay.blit(self.display_image, (self.x, self.y))
+#Health management ends here
 
-
+#User paddle configurations starts here
 class Dodge_bar():
     def __init__(self, x, y, width, height):
         self.x = x
@@ -192,7 +124,9 @@ class Dodge_bar():
         self.display_image = pygame.transform.scale(self.display_image, (self.width, self.height))
         gameDisplay.blit(self.display_image, (self.x, self.y))
 
+#User paddle configurations ends here
 
+#Ball configurations starts here
 class Ball_falling():
     def __init__(self, x, y):
         self.x = x
@@ -203,8 +137,9 @@ class Ball_falling():
         self.angle = 0
         self.display_image = pygame.image.load(self.image).convert_alpha()
         gameDisplay.blit(self.display_image, (self.x, self.y))
+#Ball configurations ends here
 
-
+#Class for PowerUps
 class PowerUps:
     def __init__(self):
         self.variable = 0
@@ -221,25 +156,30 @@ class PowerUps:
 
     def gun(self):
         return False
+#PowerUps configurations ends here
 
-
-##Function to display text on screen
+#Function to display text on the screen
 def message_to_screen(msg, color, position, fontsize):
     font = pygame.font.Font("fonts/3" + str(2 + 2) + ".ttf", fontsize)  # Rendering font
     screen_text = font.render(msg, True, color)  # Inserting message into font and rendering colour
     gameDisplay.blit(screen_text, [position, position])  # Displaying text on the screen
+#Funtion to display text ends here
 
-
+#Generating multiples
 def multiples(m, count1, count2, list1):
     for i in range(count1, count2):
         value = i * m
         list1.append(value)
     return True
-
-
 run_multiples = multiples(4, 0, 100, multiples_list)  # Generating multiples from the function above to adjust speed in game
 twenty_run_multiples = multiples(20, 0, 100, twenty_list)
+#Generating multiples ends here
+
+#initialising user's name
 name = 0
+#user's name Initialising ends here
+
+#function for the login screen
 def enter_Name():
     global name
     global user_points
@@ -259,10 +199,6 @@ def enter_Name():
             name_entered = True
         gameDisplay.fill(white)
         gameDisplay.blit(login_image,(0,0))
-        #message_to_screen("Waiting For Username", red, [200, 100], 35)
-        #message_to_screen("Enter The Username You Previously Used", black, [120, 200], 30)
-        #message_to_screen("OR", black, [380, 250], 35)
-        #message_to_screen("Choose any username to create a new account", black, [90, 300], 30)
         pygame.display.update()
         clock.tick(10)
         if name_entered:
@@ -285,26 +221,41 @@ def enter_Name():
             if name_entered:
                 enter_name = False
                 game_Menu()
-
         box = DialogBox()
         box.box()
+#Login screen ends here
 
+#DialogBox Functionality starts here
+class DialogBox:
+    def box(self):
+        global name
+        self.master = Tk()
+        self.master.title("Login Or Create Account / Enter Username")
+        Label(self.master, text="Username").grid(row=0)
+        self.e1 = Entry(self.master)
+        self.e1.grid(row=0, column=1)
+        Button(self.master, text='Login/Register', command=self.login_user).grid(row=3, column=0, sticky=W, pady=4)
+        self.e1.bind('<Return>', self.login_user)
+        mainloop()
 
+    def login_user(self, callback=False):
+        global name
+        name = self.e1.get()
+        self.master.destroy()
+#DialogBox functionality ends here
 
-
+#Leaderboard screen starts here
 def leader_board():
     global scores
     leaderboard_menu = True
     global leaderboard
     global scores
     leaderboard_image = pygame.image.load("images/leaderboard.jpg").convert()
-	
     try:
         leaderboard = Leaderboard.LeaderBoardManager()
         scores = leaderboard.run()
     except:
         print ("Can't Connect to server")
-
     while leaderboard_menu:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -315,8 +266,6 @@ def leader_board():
                 if event.key == pygame.K_b:
                     leaderboard_menu = False
                     game_Menu()
-
-
         try:
             gameDisplay.fill(white)
             score1 = scores[0]
@@ -346,7 +295,6 @@ def leader_board():
 
             gameDisplay.fill(white)
             gameDisplay.blit(leaderboard_image,(0,0))
-            #message_to_screen("Leaderboard", black, [200, 100], 35)
 
             message_to_screen(score1_name,white,[130,130],30)
             message_to_screen(str(score1_score),white,[630,130],30)
@@ -368,8 +316,6 @@ def leader_board():
             message_to_screen("Can't Connect To Server",red,[200,200],30)
             message_to_screen("Press B to go back",red,[200,350],30)
 
-
-        #message_to_screen("Press B To Go Back",black,[200,500],25)
         mouse_pos = pygame.mouse.get_pos()
         if mouse_pos[0] >= 275 and mouse_pos[0] < 507 and mouse_pos[1] >= 548 and mouse_pos[1] < 585:
             mouse_click = pygame.mouse.get_pressed()
@@ -379,25 +325,9 @@ def leader_board():
         pygame.display.update()
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
         clock.tick(10)
+#Leaderboard screen ends here
 
-class DialogBox:
-    def box(self):
-        global name
-        self.master = Tk()
-        self.master.title("Login Or Create Account / Enter Username")
-        Label(self.master, text="Username").grid(row=0)
-        self.e1 = Entry(self.master)
-        self.e1.grid(row=0, column=1)
-        Button(self.master, text='Login/Register', command=self.login_user).grid(row=3, column=0, sticky=W, pady=4)
-        self.e1.bind('<Return>', self.login_user)
-        mainloop()
-
-    def login_user(self, callback=False):
-        global name
-        name = self.e1.get()
-        self.master.destroy()
-
-
+#Game menu screen starts here
 def game_Menu():
     global name
     global user_points
@@ -408,7 +338,7 @@ def game_Menu():
     menu_image = "images/menu.jpg"
     image_menu = pygame.image.load(menu_image).convert()
 
-    
+
     try:
         global_high_score = server.get_num_score()
         if global_high_score == "":
@@ -477,15 +407,9 @@ def game_Menu():
 
         pygame.display.update()
         clock.tick(1000)
+#Game menu screen ends here
 
-
-def no_repeats(last_pos, new_pos):
-    last_pos_li = last_pos
-    if last_pos_li[-1] == new_pos:
-        return True
-    else:
-        return False
-
+#Game over screen starts here
 def Game_Over():
     gameover = True
     global points
@@ -545,19 +469,13 @@ def Game_Over():
 
         gameDisplay.fill(white)
         gameDisplay.blit(gameover_image,(0,0))
-        #message_to_screen("GAME OVER!", red, [195, 180], 60)
         message_to_screen(str(points_display), white, [440, 31], 60)
         message_to_screen(str(user_high_score), white, [370, 566], 30)
-        #message_to_screen("Press R to play again", black, [200, 290], 25)
-        #message_to_screen("Press M for main menu", black, [200, 320], 25)
-        #message_to_screen("Press Q to Quit", black, [200, 350], 25)
         try:
             if server.compare_scores(int(global_high_score), points):
-                #message_to_screen(str(global_high_score), light_blue, [235, 170], 30)
                 print ("Not Connected")
 
             if not server.compare_scores(int(global_high_score), points):
-                #message_to_screen("Global High Score: " + str(global_high_score), red, [200, 240], 20)
                 message_to_screen(str(global_high_score), light_blue, [555, 200], 30)
 
         except:
@@ -578,10 +496,19 @@ def Game_Over():
                 if event.key == pygame.K_m:
                     gameover = False
                     game_Menu()
+#Game over screen ends here
 
+#Functionality to avoid ball coming from the same position twice
+def no_repeats(last_pos, new_pos):
+    last_pos_li = last_pos
+    if last_pos_li[-1] == new_pos:
+        return True
+    else:
+        return False
+#no repeat functionality ends here
 
-
-def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choice(random_ball_pos),timer=0,ball_speed = 3.8,wait_time = True):
+#Main game loop starts here
+def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choice(random_ball_pos),timer=0,ball_speed = 3.8,wait_time = True,wait_pause = 0):
     global points
     wait_time = wait_time
     points = point
@@ -619,6 +546,8 @@ def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choi
     last_ball_pos_y = []
     previous_time = []
     previous_ball_speed = []
+    wait_pause = wait_pause
+    user_info = []
     while game_loop:
         pygame.mouse.set_cursor(*pygame.cursors.arrow)
         # Health bar functionality
@@ -652,24 +581,24 @@ def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choi
                     previous_ball_speed.append(ball_speed)
                     pause = True
                     game_loop = False
-                    
-                        
+
+
             elif event.type == pygame.KEYUP:
                 if event.key == pygame.K_RIGHT:
                     pressed_right = False
                 if event.key == pygame.K_LEFT:
                     pressed_left = False
-                           
+
 
         if pressed_right == True:
             bar.x += bar_speed
         if pressed_left == True:
             bar.x += -bar_speed
 
-        
+
         ball1.y += ball_speed
 
-        
+
         if ball1.y > display_width - 200:  # When the ball is dodged
             ball1.y = 0
             ball1.x = random.choice(random_ball_pos)
@@ -750,7 +679,7 @@ def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choi
 
         last_bar_pos.append(bar.x)
 
-        
+
         if heart == True:
             heart_y += 3
             if heart_y >= bar.y and heart_x > bar.x - 50 and heart_x <= bar.x + bar_height - 10:
@@ -764,7 +693,7 @@ def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choi
             else:
                 heart = False
                 heart_time = round(time) + 30
-        # gameDisplay.fill(white)
+
         gameDisplay.blit(bg, (0, 0))
         message_to_screen(str(points), red, [740, 565], 25)
         message_to_screen("Health ", red, [50, 569], 25)
@@ -778,20 +707,46 @@ def gameLoop(health = 150,point = 0,bar_x = 300,ball_y = 50,ball_x = random.choi
 
         pygame.display.update()
         clock.tick(120)
-        if wait_time==True:
-            pygame.time.delay(1000)
-            wait_time = False
+
+
+    #Pause functionality starts here
+    time_paused = 0
+    time_paused_allowed = 20
     while pause:
+        time_paused += timecal
+        new_time_paused = round(time_paused)
+        count_down = round(time_paused_allowed - time_paused)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 offline_update(name)
                 pygame.quit()
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
+                if event.key == pygame.K_SPACE :
                     pause = False
                     game_loop = True
-                    gameLoop(health_num,points,last_bar_pos[-1],last_ball_pos_y[-1],previous_ball_pos_x[-1],previous_time[-1],previous_ball_speed[-1],False)
-        message_to_screen("Game Paused", red, [300, 469], 35)
+                    gameLoop(health_num,points,last_bar_pos[-1],last_ball_pos_y[-1],previous_ball_pos_x[-1],previous_time[-1],previous_ball_speed[-1],False,3)
+        if  count_down <= 0:
+            pause = False
+            game_loop = True
+            gameLoop(health_num,points,last_bar_pos[-1],last_ball_pos_y[-1],previous_ball_pos_x[-1],previous_time[-1],previous_ball_speed[-1],False,3)
+
+        gameDisplay.blit(bg, (0, 0))
+        message_to_screen("Game Paused", red, [270, 409], 35)
+        message_to_screen("Game will continue in "+str(round(time_paused_allowed - time_paused)), red, [210, 460], 30)
+        message_to_screen("OR PRESS SPACE TO CONTINUE", red, [210, 500], 30)
+
+        message_to_screen(str(points), red, [740, 565], 25)
+        message_to_screen("Health ", red, [50, 569], 25)
+        ball1.render()
+        bar.render()
+        health.render()
         pygame.display.update()
         clock.tick(50)
-enter_Name()
+
+    #Pause functionality ends here
+def run_game():
+    enter_Name()
+
+#Starting the game by calling the first function that runs the game
+run_game()
